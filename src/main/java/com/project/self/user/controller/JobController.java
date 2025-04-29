@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/jobs")
 public class JobController {
@@ -63,6 +64,14 @@ public class JobController {
         job.setSalary(request.getSalary());
 
         return ResponseEntity.ok(jobService.updateJob(job));
+    }
+
+    @GetMapping("/{jobId}")
+    public ResponseEntity<Job> getJobById(@PathVariable Long jobId) {
+        Optional<Job> jobOptional = jobService.findById(jobId);
+        return jobOptional
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 }

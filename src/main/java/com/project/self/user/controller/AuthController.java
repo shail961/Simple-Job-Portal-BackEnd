@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -42,7 +44,10 @@ public class AuthController {
             );
             UserDetails userDetails = userService.loadUserByUsername(request.getUsername());
             String token = jwtUtil.generateToken(userDetails);
-            return ResponseEntity.ok(Collections.singletonMap("token", token));
+            Map<String,String> response= new HashMap<>();
+            response.put("token",token);
+            response.put("role",userDetails.getAuthorities().stream().findFirst().get().getAuthority());
+            return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }

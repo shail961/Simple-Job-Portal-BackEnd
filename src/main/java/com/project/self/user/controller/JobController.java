@@ -4,6 +4,7 @@ import com.project.self.user.dto.JobRequest;
 import com.project.self.user.entity.Job;
 import com.project.self.user.entity.User;
 import com.project.self.user.enums.Role;
+import com.project.self.user.repository.ApplicationRepository;
 import com.project.self.user.service.JobService;
 import com.project.self.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ public class JobController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ApplicationRepository applicationRepository;
 
     @PostMapping
     public ResponseEntity<?> postJob(@RequestBody JobRequest request, Principal principal) {
@@ -67,9 +71,12 @@ public class JobController {
     }
 
     @GetMapping("/{jobId}")
-    public ResponseEntity<Job> getJobById(@PathVariable Long jobId) {
+    public ResponseEntity<Job> getJobById(@PathVariable Long jobId, Principal principal) {
         Optional<Job> jobOptional = jobService.findById(jobId);
+        User user = userService.findByUsername(principal.getName()).orElseThrow();
+        boolean isApplied = applicationRepository.findByApplicant(user).stream().anyMatch(a -> jobId.equals(a.getJob().getId()));
         return jobOptional
+                .map(a -> {a.setApplied(isApplied); return a;})
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

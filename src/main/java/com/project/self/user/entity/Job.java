@@ -24,4 +24,7 @@ public class Job {
 
     @ManyToOne
     private User postedBy;
+
+    @Transient
+    private boolean applied=false;
 }

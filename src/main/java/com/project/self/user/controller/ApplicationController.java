@@ -33,6 +33,8 @@ public class ApplicationController {
 
         Job job = jobRepository.findById(request.getJobId()).orElseThrow(() -> new RuntimeException("Job not found"));
 
+
+
         Application application = new Application();
         application.setApplicant(user);
         application.setJob(job);

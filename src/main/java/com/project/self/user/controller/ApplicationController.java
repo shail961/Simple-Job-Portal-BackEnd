@@ -11,9 +11,15 @@ import com.project.self.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 @RestController
 @RequestMapping("/applications")
@@ -44,8 +50,8 @@ public class ApplicationController {
         return ResponseEntity.ok(applicationService.applyToJob(application));
     }
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestParam ApplicationStatus status) {
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestParam("status") ApplicationStatus status) {
         Application application = applicationService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 
@@ -64,5 +70,18 @@ public class ApplicationController {
         }
 
         return ResponseEntity.ok(applicationService.getApplicationsByJob(job));
+    }
+
+    @GetMapping("/my-posted-jobs")
+    public ResponseEntity<List<Application>> getApplicationsToMyJobs(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User recruiter = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        List<Job> myJobs = jobRepository.findByPostedBy(recruiter);
+        List<Application> applications =applicationService.findByJobIn(myJobs);
+        Collections.sort(applications,  Comparator.comparing(Application ::getId));
+        return ResponseEntity.ok(applications);
     }
 }

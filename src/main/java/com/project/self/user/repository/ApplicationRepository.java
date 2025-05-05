@@ -12,4 +12,5 @@ import java.util.List;
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     List<Application> findByJob(Job job);
     List<Application> findByApplicant(User applicant);
+    List<Application> findByJobIn(List<Job> jobs);
 }

@@ -31,4 +31,6 @@ public class ApplicationService {
     public List<Application> getApplicationsByJob(Job job) {
         return applicationRepository.findByJob(job);
     }
+
+    public List<Application>  findByJobIn(List<Job> jobs){ return applicationRepository.findByJobIn( jobs);}
 }

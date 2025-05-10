@@ -7,6 +7,7 @@ import com.project.self.user.enums.Role;
 import com.project.self.user.repository.ApplicationRepository;
 import com.project.self.user.service.JobService;
 import com.project.self.user.service.UserService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,12 +72,16 @@ public class JobController {
     }
 
     @GetMapping("/{jobId}")
+    @Transactional
     public ResponseEntity<Job> getJobById(@PathVariable Long jobId, Principal principal) {
         Optional<Job> jobOptional = jobService.findById(jobId);
         User user = userService.findByUsername(principal.getName()).orElseThrow();
         boolean isApplied = applicationRepository.findByApplicant(user).stream().anyMatch(a -> jobId.equals(a.getJob().getId()));
         return jobOptional
-                .map(a -> {a.setApplied(isApplied); return a;})
+                .map(a -> {
+                    a.setApplied(isApplied);
+                    return a;
+                })
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

@@ -28,4 +28,8 @@ public class Application {
 
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status; // PENDING, APPROVED, REJECTED
+
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    private byte[] resume;
 }

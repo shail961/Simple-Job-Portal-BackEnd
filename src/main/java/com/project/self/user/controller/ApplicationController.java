@@ -84,4 +84,16 @@ public class ApplicationController {
         Collections.sort(applications,  Comparator.comparing(Application ::getId));
         return ResponseEntity.ok(applications);
     }
+
+    @GetMapping("/my-applications")
+    public ResponseEntity<List<Application>> getAppliedApplications(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User applicant = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        List<Application> applications =applicationService.findByApplicant(applicant);
+        Collections.sort(applications,  Comparator.comparing(Application ::getId));
+        return ResponseEntity.ok(applications);
+    }
 }

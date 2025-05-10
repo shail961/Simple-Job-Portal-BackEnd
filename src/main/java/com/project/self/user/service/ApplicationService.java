@@ -2,6 +2,7 @@ package com.project.self.user.service;
 
 import com.project.self.user.entity.Application;
 import com.project.self.user.entity.Job;
+import com.project.self.user.entity.User;
 import com.project.self.user.enums.ApplicationStatus;
 import com.project.self.user.repository.ApplicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,4 +34,6 @@ public class ApplicationService {
     }
 
     public List<Application>  findByJobIn(List<Job> jobs){ return applicationRepository.findByJobIn( jobs);}
+
+    public List<Application> findByApplicant(User applicant){ return applicationRepository.findByApplicant(applicant);}
 }

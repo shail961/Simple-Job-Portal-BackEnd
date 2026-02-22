@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "jobs")
 @Getter
@@ -26,5 +29,16 @@ public class Job {
     private User postedBy;
 
     @Transient
-    private boolean applied=false;
+    private boolean applied = false;
+
+    @Transient
+    private double score = 0.0;
+
+    @ManyToMany
+    @JoinTable(
+            name = "job_skills",
+            joinColumns = @JoinColumn(name = "job_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id")
+    )
+    private Set<Skill> requiredSkills = new HashSet<>();
 }

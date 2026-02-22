@@ -119,4 +119,12 @@ public class ApplicationController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resumeData);
     }
+
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadResume(@RequestParam MultipartFile file, @AuthenticationPrincipal UserDetails userDetails) throws Exception {
+        User applicant = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return ResponseEntity.ok(applicationService.processResume(file, applicant));
+    }
 }

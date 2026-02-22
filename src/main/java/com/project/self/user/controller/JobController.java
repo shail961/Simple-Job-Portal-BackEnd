@@ -50,8 +50,9 @@ public class JobController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Job>> getAllJobs() {
-        return ResponseEntity.ok(jobService.getAllJobs());
+    public ResponseEntity<List<Job>> getAllJobs(Principal principal) {
+        User applicant = userService.findByUsername(principal.getName()).orElseThrow();
+        return ResponseEntity.ok(jobService.getAllJobs(applicant));
     }
 
     @PutMapping("/{id}")

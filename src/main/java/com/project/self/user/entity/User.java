@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -24,4 +27,14 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role; // RECRUITER or APPLICANT
+
+    @ManyToMany
+    @JoinTable(
+            name = "candidate_skills",
+            joinColumns = @JoinColumn(name = "users_id",               // Column name in the JOIN table
+                    referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "skills_id",               // Column name in the JOIN table
+                    referencedColumnName = "id")
+    )
+    private Set<Skill> skills = new HashSet<>();
 }

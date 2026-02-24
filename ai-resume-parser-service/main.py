@@ -16,7 +16,7 @@ from entity.skill_extractor import SkillExtractor
 from entity.education_extractor import EducationExtractor
 from entity.experience_extractor import ExperienceExtractor
 
-file_path = "Shaik_Sahil_Ahmed_SDE.pdf"
+# file_path = "Shaik_Sahil_Ahmed_SDE.pdf"
 
 # text = TextExtractor.extract(file_path)
 # print(text)
@@ -52,7 +52,8 @@ async def parse_resume(file: UploadFile):
 
 @app.post("/parse-job-description")
 async def parse_resume(req: ResumeRequest):
-    skills = skill_extractor.extract(req.text)
-    return {
-        "skills": skills
-    }
+    # skills = skill_extractor.extract(req.text)
+    # return {
+    #     "skills": skills
+    # }
+    return skill_extractor.extract_mandatory_optional(req.text, skill_extractor.extract)

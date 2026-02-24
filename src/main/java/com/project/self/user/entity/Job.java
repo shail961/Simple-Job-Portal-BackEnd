@@ -36,9 +36,18 @@ public class Job {
 
     @ManyToMany
     @JoinTable(
-            name = "job_skills",
-            joinColumns = @JoinColumn(name = "job_id"),
-            inverseJoinColumns = @JoinColumn(name = "skill_id")
+            name = "job_mandatory_skills",
+            joinColumns = @JoinColumn(name = "jobs_id"),
+            inverseJoinColumns = @JoinColumn(name = "skills_id")
     )
-    private Set<Skill> requiredSkills = new HashSet<>();
+    private Set<Skill> mandatorySkills = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "job_optional_skills",
+            joinColumns = @JoinColumn(name = "jobs_id"),
+            inverseJoinColumns = @JoinColumn(name = "skills_id")
+    )
+    private Set<Skill> optionalSkills = new HashSet<>();
+
 }

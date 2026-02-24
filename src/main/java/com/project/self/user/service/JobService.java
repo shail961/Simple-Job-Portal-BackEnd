@@ -26,6 +26,9 @@ public class JobService {
     @Autowired
     private SkillService skillService;
 
+    private static final double MANDATORY_WEIGHT = 0.7;
+    private static final double OPTIONAL_WEIGHT = 0.3;
+
     private final WebClient webClient = WebClient.create("http://localhost:8000");
 
     public Job postJob(Job job) {
@@ -35,9 +38,13 @@ public class JobService {
                 .retrieve()
                 .bodyToMono(JobDescriptionParseResponse.class)
                 .block();
-        for (String skillName : response.getSkills()) {
+        for (String skillName : response.getMandatorySkills()) {
             Skill skill = skillService.getOrCreateSkill(skillName);
-            job.getRequiredSkills().add(skill);
+            job.getMandatorySkills().add(skill);
+        }
+        for (String skillName : response.getOptionalSkills()) {
+            Skill skill = skillService.getOrCreateSkill(skillName);
+            job.getOptionalSkills().add(skill);
         }
 
         return jobRepository.save(job);
@@ -50,9 +57,9 @@ public class JobService {
         log.info("user skills: " + applicant.getSkills());
 
         jobs.forEach(job -> {
-            double score = calculateMatchScore(
+            double score = calculateWeightedScore(
                     applicant.getSkills(),
-                    job.getRequiredSkills()
+                    job
             );
             job.setScore(score);
         });
@@ -62,23 +69,39 @@ public class JobService {
 
     }
 
-    private double calculateMatchScore(Set<Skill> candidateSkills,
-                                       Set<Skill> jobSkills) {
+    public double calculateWeightedScore(Set<Skill> skills, Job job) {
+
+        Set<UUID> candidateSkillIds = skills.stream()
+                .map(Skill::getId)
+                .collect(Collectors.toSet());
+
+        double mandatoryScore = calculateCategoryScore(
+                candidateSkillIds,
+                job.getMandatorySkills()
+        );
+
+        double optionalScore = calculateCategoryScore(
+                candidateSkillIds,
+                job.getOptionalSkills()
+        );
+
+        return (mandatoryScore * MANDATORY_WEIGHT
+                + optionalScore * OPTIONAL_WEIGHT) * 100;
+    }
+
+    private double calculateCategoryScore(Set<UUID> candidateSkillIds,
+                                          Set<Skill> jobSkills) {
 
         if (jobSkills == null || jobSkills.isEmpty()) {
             return 0.0;
         }
 
-        Set<UUID> candidateSkillIds = candidateSkills.stream()
-                .map(Skill::getId)
-                .collect(Collectors.toSet());
-
-        long matchedCount = jobSkills.stream()
+        long matched = jobSkills.stream()
                 .map(Skill::getId)
                 .filter(candidateSkillIds::contains)
                 .count();
 
-        return (double) matchedCount / jobSkills.size() * 100;
+        return (double) matched / jobSkills.size();
     }
 
     public Job updateJob(Job job) {

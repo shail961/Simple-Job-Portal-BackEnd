@@ -87,4 +87,14 @@ public class JobController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/explain/{jobId}")
+    @Transactional
+    public ResponseEntity<?> explainMatchScore(@PathVariable Long jobId, Principal principal) {
+        Job job = jobService.findById(jobId).get();
+        User user = userService.findByUsername(principal.getName()).orElseThrow();
+
+        return ResponseEntity.ok(jobService.explainMatchScore(job, user));
+
+    }
+
 }

@@ -1,6 +1,8 @@
 package com.project.self.user.service;
 
 import com.project.self.user.dto.JobDescriptionParseResponse;
+import com.project.self.user.dto.RagExplainRequest;
+import com.project.self.user.dto.RagExplainResponse;
 import com.project.self.user.dto.ResumeParseResponse;
 import com.project.self.user.entity.Job;
 import com.project.self.user.entity.Skill;
@@ -110,5 +112,41 @@ public class JobService {
 
     public Optional<Job> findById(Long id) {
         return jobRepository.findById(id);
+    }
+
+    public RagExplainResponse explainMatchScore(Job job, User applicant) {
+        double mandatoryScore = calculateCategoryScore(
+                applicant.getSkills().stream().map(Skill::getId).collect(Collectors.toSet()),
+                job.getMandatorySkills()
+        );
+
+        double optionalScore = calculateCategoryScore(
+                applicant.getSkills().stream().map(Skill::getId).collect(Collectors.toSet()),
+                job.getOptionalSkills()
+        );
+
+        RagExplainRequest request = RagExplainRequest.builder()
+                .jobTitle(job.getTitle())
+                .jobDescription(job.getDescription())
+                .mandatorySkills(job.getMandatorySkills().stream().map(Skill::getName).toList())
+                .optionalSkills(job.getOptionalSkills().stream().map(Skill::getName).toList())
+                .candidateSkills(applicant.getSkills().stream().map(Skill::getName).toList())
+//                .resumeText(applicant.getResumeText())
+                .userId(applicant.getId())
+                .mandatoryMatch(mandatoryScore)
+                .optionalMatch(optionalScore)
+                .weightedScore((mandatoryScore * MANDATORY_WEIGHT
+                        + optionalScore * OPTIONAL_WEIGHT) * 100)
+                .build();
+        log.info("request: {}", request);
+
+        var response = webClient.post()
+                .uri("/rag/explain")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(RagExplainResponse.class)
+                .block();
+        log.info("response: {}", response);
+        return response;
     }
 }

@@ -37,4 +37,10 @@ public class User {
                     referencedColumnName = "id")
     )
     private Set<Skill> skills = new HashSet<>();
+
+    @Column(columnDefinition = "TEXT")
+    private String resumeText; // Store the resume text for RAG explanations
+
+    private String resumeVectorId;
+
 }

@@ -77,10 +77,31 @@ public class ApplicationService {
             Skill skill = skillService.getOrCreateSkill(skillName);
             applicant.getSkills().add(skill);
         }
+        applicant.setResumeText(response.getResumeText());
+
+        String vectorId = storeResumeEmbedding(applicant.getId(), response.getResumeText());
+        applicant.setResumeVectorId(vectorId);
+
         userService.save(applicant);
 
         return response;
 
+    }
+
+    private String storeResumeEmbedding(Long userId, String resumeText) {
+        Map<String, Object> request = Map.of(
+                "userId", userId,
+                "resumeText", resumeText
+        );
+
+        Map<String, String> response = webClient.post()
+                .uri("/embeddings/store")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+        return response.get("vectorId");
     }
 
 

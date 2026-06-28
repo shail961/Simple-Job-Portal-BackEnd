@@ -1,19 +1,16 @@
 package com.project.self.user.service;
 
+import com.project.self.user.ai.dto.JobSummary;
 import com.project.self.user.dto.JobDescriptionParseResponse;
 import com.project.self.user.dto.RagExplainRequest;
 import com.project.self.user.dto.RagExplainResponse;
-import com.project.self.user.dto.ResumeParseResponse;
 import com.project.self.user.entity.Job;
 import com.project.self.user.entity.Skill;
 import com.project.self.user.entity.User;
 import com.project.self.user.repository.JobRepository;
-import com.project.self.user.repository.SkillRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
@@ -148,5 +145,124 @@ public class JobService {
                 .block();
         log.info("response: {}", response);
         return response;
+    }
+
+    public List<JobSummary> searchJobs(
+            String keyword,
+            String city,
+            List<String> skills
+    ) {
+
+        List<Job> jobs = jobRepository.findAll();
+
+        return jobs.stream()
+                .filter(job -> matchesKeyword(job, keyword))
+                .filter(job -> matchesCity(job, city))
+                .filter(job -> matchesSkills(job, skills))
+                .map(this::toSummary)
+                .toList();
+    }
+
+    private boolean matchesKeyword(
+            Job job,
+            String keyword
+    ) {
+
+        if (keyword == null || keyword.isBlank()) {
+            return true;
+        }
+
+        String search = keyword.toLowerCase();
+
+        return Optional.ofNullable(job.getTitle())
+                .orElse("")
+                .toLowerCase()
+                .contains(search)
+
+                ||
+
+                Optional.ofNullable(job.getDescription())
+                        .orElse("")
+                        .toLowerCase()
+                        .contains(search);
+    }
+
+    private boolean matchesCity(
+            Job job,
+            String city
+    ) {
+
+        if (city == null || city.isBlank()) {
+            return true;
+        }
+
+        return city.equalsIgnoreCase(
+                Optional.ofNullable(job.getLocation())
+                        .orElse("")
+        );
+    }
+
+    private boolean matchesSkills(
+            Job job,
+            List<String> skills
+    ) {
+
+        if (skills == null || skills.isEmpty()) {
+            return true;
+        }
+
+        Set<String> jobSkills = new HashSet<>();
+
+        if (job.getMandatorySkills() != null) {
+            job.getMandatorySkills()
+                    .stream()
+                    .map(Skill::getName)
+                    .filter(Objects::nonNull)
+                    .map(String::toLowerCase)
+                    .forEach(jobSkills::add);
+        }
+
+        if (job.getOptionalSkills() != null) {
+            job.getOptionalSkills()
+                    .stream()
+                    .map(Skill::getName)
+                    .filter(Objects::nonNull)
+                    .map(String::toLowerCase)
+                    .forEach(jobSkills::add);
+        }
+
+        return skills.stream()
+                .filter(Objects::nonNull)
+                .map(String::toLowerCase)
+                .allMatch(jobSkills::contains);
+    }
+
+    private JobSummary toSummary(
+            Job job
+    ) {
+
+        return new JobSummary(
+
+                job.getId(),
+
+                job.getTitle(),
+
+                job.getLocation(),
+
+                job.getDescription(),
+
+                Optional.ofNullable(job.getMandatorySkills())
+                        .orElse(Set.of())
+                        .stream()
+                        .map(Skill::getName)
+                        .toList(),
+
+                Optional.ofNullable(job.getOptionalSkills())
+                        .orElse(Set.of())
+                        .stream()
+                        .map(Skill::getName)
+                        .toList()
+
+        );
     }
 }
